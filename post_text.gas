@@ -1,0 +1,42 @@
+function doPost() {
+  //スプレッドシートの読み込み
+  var obj = SpreadsheetApp.openByUrl("読み込むスプレッドシート")
+  var sheet1 = obj.getSheetByName("シート1")
+  var sheet2 = obj.getSheetByName("シート2")
+  var number = sheet2.getRange(1,1).getValue()
+
+  // 最終行をもとに、メンバーの名前を取得
+  var lastrow = sheet1.getLastRow()
+  var values = sheet1.getRange(1, 1, lastrow).getValues()
+  var names = []
+  for (var i = 0; i < values.length; i++) {
+    //Logger.log(values[i])
+    names.push(values[i])
+  }
+
+  // number(どこまで進んだか)をもとに、当番通知テキストをつくる
+  var text = "今週のごみ捨て当番は、\n"
+  text += names[number%lastrow] + "さんと" + names[(number+1)%lastrow] + "さんです。\n"
+  text += "よろしくお願いします!"
+  Logger.log(text)
+
+  // 次週の担当者の番号を記録
+  var next_number = sheet2.getRange(1,1).setValue((number+2)%lastrow).getValue()
+  Logger.log(next_number)
+
+  // 出力
+  var options = {
+    "method" : "post",
+    "contentType" : "application/json",
+    "payload" : JSON.stringify(
+      {
+      "username" : "ぼっと君",
+      "icon_emoji":":email:",
+      "text" : text,
+      link_names: 1
+      }
+    )
+  };
+  var channel = "チャンネルのトークン"
+  UrlFetchApp.fetch(channel, options);
+}
